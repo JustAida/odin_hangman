@@ -1,20 +1,12 @@
 module Hangman
   class Game
-    attr_accessor :hangman_template
-
     def initialize
-      # Make a template for stick figure.
-      @template = [
-        " ____",
-        " |   |",
-        " |   o",
-        " |  /|\\",
-        " |  / \\",
-        "_|_"
-      ]
-      # Make a counter for the remaining incorrect guesses.
+      @template = template
       @remaining_guesses = 6
       @current_hangman = ""
+      @secret_word = secret_word
+      @incorrect_letters = []
+      @correct_letters = []
     end
 
     # Randomly select a word between 5 and 12 characters long.
@@ -28,14 +20,34 @@ module Hangman
       secret_words.sample
     end
 
+    def template
+      [
+        " ____",
+        " |   |",
+        " |   o",
+        " |  /|\\",
+        " |  / \\",
+        "_|_"
+      ]
+    end
+
     def display_hangman
       puts @current_hangman = @remaining_guesses == 6 ? "" : @template[@remaining_guesses..-1]
     end
 
+    def display_guess_info
+      guess_info = @secret_word.chars.map do |char|
+        @correct_letters.include?(char) ? char : "_"
+      end
+      puts "\n#{guess_info.join(" ")}"
+      puts "\nIncorrect letters: #{@incorrect_letters.join(" ")}"
+    end
+
     def play
       until @remaining_guesses == -1
-        puts @remaining_guesses
+        puts "\nRemaining guesses: #{@remaining_guesses}"
         display_hangman
+        display_guess_info
         @remaining_guesses -= 1
       end
     end
