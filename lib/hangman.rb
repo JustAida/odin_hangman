@@ -8,7 +8,7 @@ module Hangman
       @secret_word = secret_word
       @incorrect_letters = []
       @correct_letters = []
-      @player = Player.new(self)
+      @player = Player.new
       @save_files = save_files
       intro
     end
@@ -144,7 +144,7 @@ module Hangman
     end
 
     def display_save_files
-      puts "\nWould you like to load a save file? [Type \"y\" to load or anything else if you don't want to load]"
+      puts "\nWould you like to load a save file? [Type \"y\" to load or press enter if you don't want to load]"
       load_file = gets.chomp.downcase
       return "" unless load_file == "y"
 
@@ -158,18 +158,10 @@ module Hangman
   end
 
   class Player
-    def initialize(game)
-      @game = game
-    end
-
     def guess
       gets.chomp.downcase
     end
   end
 end
-
-# Implement the functionality where the player can choose to save the progress of the game.
-
-# Ask the player when the program first loads if the player want to load one of the saves.
 
 Hangman::Game.new.play
