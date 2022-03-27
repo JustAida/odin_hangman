@@ -1,13 +1,25 @@
+require "json"
+
 module Hangman
   class Game
     def initialize
       @template = template
       @remaining_guesses = @template.size
-      @current_hangman = ""
       @secret_word = secret_word
       @incorrect_letters = []
       @correct_letters = []
       @player = Player.new(self)
+      @save_files = save_files
+      intro
+    end
+
+    def intro
+      puts "Welcome to Hangman game!"
+      puts "How to play:"
+      puts "  - Type a letter from A-Z for each turn."
+      puts "  - If you wish to save the game you could type \"save\" at anytime."
+      puts "That's it! Enjoy playing the game!"
+      display_save_files unless @save_files.empty?
     end
 
     # Randomly select a word between 5 and 12 characters long.
@@ -35,6 +47,7 @@ module Hangman
     end
 
     def display_hangman
+      puts "\nRemaining guesses: #{@remaining_guesses}\n\n"
       puts @current_hangman = @remaining_guesses == @template.size ? "" : @template[@remaining_guesses..-1]
     end
 
@@ -58,8 +71,9 @@ module Hangman
     end
 
     def ask_player_guess
-      print "Type the guess: "
+      print "Type the guess or \"save\": "
       @player_guess = @player.guess
+      save if @player_guess == "save"
       ask_player_guess until valid_guess?(@player_guess)
     end
 
@@ -86,8 +100,7 @@ module Hangman
     end
 
     def play
-      until @remaining_guesses == -1
-        puts "\nRemaining guesses: #{@remaining_guesses + 1}\n\n"
+      until @remaining_guesses == 0
         display_hangman
         display_guess_info
         ask_player_guess
@@ -95,7 +108,52 @@ module Hangman
         @remaining_guesses -= 1 unless @correct
         return win_message if win?
       end
+      display_hangman
       puts "\nYou ran out of guesses. It was #{@secret_word}."
+    end
+
+    def save
+      folder_name = "save_files"
+      Dir.mkdir(folder_name) unless Dir.exist?(folder_name)
+      file_name = "#{folder_name}/#{Time.now.to_s.split[0..1].join("_")}.json"
+      File.open(file_name, "w") do |file|
+        JSON.dump({
+                    remaining_guesses: @remaining_guesses,
+                    secret_word: @secret_word,
+                    incorrect_letters: @incorrect_letters,
+                    correct_letters: @correct_letters
+                  }, file)
+      end
+      puts "\nGame Saved!\n\n"
+    end
+
+    def load(save_file_number)
+      File.open(@save_files[save_file_number], "r") do |file|
+        data = JSON.parse(file.read)
+        @remaining_guesses = data["remaining_guesses"]
+        @secret_word = data["secret_word"]
+        @incorrect_letters = data["incorrect_letters"]
+        @correct_letters = data["correct_letters"]
+      end
+      play
+    end
+
+    def save_files
+      folder_name = "save_files"
+      Dir.glob("#{folder_name}/*")
+    end
+
+    def display_save_files
+      puts "\nWould you like to load a save file? [Type \"y\" to load or anything else if you don't want to load]"
+      load_file = gets.chomp.downcase
+      return "" unless load_file == "y"
+
+      puts "\nWhich save file would you like to load? [Type number only]"
+      @save_files.each_with_index do |file, index|
+        puts "#{index + 1}. #{file.sub("save_files/", "")}"
+      end
+      choice = gets.chomp until choice.to_i > 0
+      load(choice.to_i - 1)
     end
   end
 
@@ -109,9 +167,6 @@ module Hangman
     end
   end
 end
-
-# Update the display according to the guess.
-# Player will lose if out of guesses.
 
 # Implement the functionality where the player can choose to save the progress of the game.
 
