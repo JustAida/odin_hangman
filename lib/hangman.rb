@@ -73,17 +73,29 @@ module Hangman
       end
     end
 
+    def win?
+      @secret_word.chars.all? { |char| @correct_letters.include?(char) }
+    end
+
+    def win_message
+      display_hangman
+      display_guess_info
+      puts "\nYou win!!"
+      puts "Thanks for playing!"
+      exit
+    end
+
     def play
       until @remaining_guesses == -1
         puts "\nRemaining guesses: #{@remaining_guesses + 1}\n\n"
         display_hangman
         display_guess_info
-        puts @secret_word # DELETE THIS LATER
         ask_player_guess
         update_guess_info
         @remaining_guesses -= 1 unless @correct
+        return win_message if win?
       end
-      puts "\nYou ran out of guesses."
+      puts "\nYou ran out of guesses. It was #{@secret_word}."
     end
   end
 
