@@ -18,7 +18,7 @@ module Hangman
       secret_words = dictionary.select do |word|
         word.chomp.length.between?(5, 12)
       end
-      secret_words.sample
+      secret_words.sample.chomp
     end
 
     # Change the template to increase or decrease the remaining guesses.
@@ -66,8 +66,10 @@ module Hangman
     def update_guess_info
       if @secret_word.chars.include?(@player_guess)
         @correct_letters.push(@player_guess)
+        @correct = true
       else
         @incorrect_letters.push(@player_guess)
+        @correct = false
       end
     end
 
@@ -76,9 +78,10 @@ module Hangman
         puts "\nRemaining guesses: #{@remaining_guesses + 1}\n\n"
         display_hangman
         display_guess_info
+        puts @secret_word # DELETE THIS LATER
         ask_player_guess
         update_guess_info
-        @remaining_guesses -= 1
+        @remaining_guesses -= 1 unless @correct
       end
       puts "\nYou ran out of guesses."
     end
