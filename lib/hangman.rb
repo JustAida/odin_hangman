@@ -7,6 +7,7 @@ module Hangman
       @secret_word = secret_word
       @incorrect_letters = []
       @correct_letters = []
+      @player = Player.new(self)
     end
 
     # Randomly select a word between 5 and 12 characters long.
@@ -28,7 +29,8 @@ module Hangman
         " |   o",
         " |  /|\\",
         " |  / \\",
-        "_|_"
+        " |", # Add/remove this to increase/decrease the reamining guesses.
+        "==="
       ]
     end
 
@@ -44,24 +46,55 @@ module Hangman
     #                Incorrect letters: O J Z
     def display_guess_info
       guess_info = @secret_word.chars.map do |char|
-        @correct_letters.include?(char) ? char : "_"
+        @correct_letters.include?(char) ? char.upcase : "_"
       end
       puts "\n#{guess_info.join(" ")}"
-      puts "\nIncorrect letters: #{@incorrect_letters.join(" ")}"
+      puts "\nIncorrect letters: #{@incorrect_letters.map(&:upcase).join(" ")}\n\n"
+    end
+
+    def valid_guess?(guess)
+      guess.length == 1 && ("a".."z").include?(guess) &&
+        !@incorrect_letters.include?(guess) && !@correct_letters.include?(guess)
+    end
+
+    def ask_player_guess
+      print "Type the guess: "
+      @player_guess = @player.guess
+      ask_player_guess until valid_guess?(@player_guess)
+    end
+
+    def update_guess_info
+      if @secret_word.chars.include?(@player_guess)
+        @correct_letters.push(@player_guess)
+      else
+        @incorrect_letters.push(@player_guess)
+      end
     end
 
     def play
       until @remaining_guesses == -1
-        puts "\nRemaining guesses: #{@remaining_guesses}"
+        puts "\nRemaining guesses: #{@remaining_guesses + 1}\n\n"
         display_hangman
         display_guess_info
+        ask_player_guess
+        update_guess_info
         @remaining_guesses -= 1
       end
+      puts "\nYou ran out of guesses."
+    end
+  end
+
+  class Player
+    def initialize(game)
+      @game = game
+    end
+
+    def guess
+      gets.chomp.downcase
     end
   end
 end
 
-# Ask the player for the guess each turn and it should be case-insensitive.
 # Update the display according to the guess.
 # Player will lose if out of guesses.
 
